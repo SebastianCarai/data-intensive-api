@@ -2,42 +2,23 @@ package main
 
 import (
 	"data-intensive-api/db"
-	"database/sql"
+	"data-intensive-api/routes"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var Db *sql.DB
-
-
-func homeHandler(w http.ResponseWriter, r *http.Request){
-	w.Write([]byte("Hello from air"))
-}
-
-func usersHandler(w http.ResponseWriter, r *http.Request){
-
-	rows, err := Db.Query("select * from users limit 10;")
-	if err != nil{
-		fmt.Printf("Error while querying db: %v\n", err)
-	}
-
-	data,convertErr := db.ConvertRowsToJson(rows)
-	if convertErr != nil{
-		fmt.Printf("Error while converting sql rows to json: %v\n", convertErr)
-	}
-
-
-	w.Write([]byte(data))
-}
-
+var Db *pgxpool.Pool
 
 func main(){
-	Db = db.ConnectDB()
+
+	db.ConnectDB()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", homeHandler)
-	mux.HandleFunc("/users", usersHandler)
+
+	routes.SetupRoutes(mux)
 
 
 	fmt.Println("Listening on port 8080")

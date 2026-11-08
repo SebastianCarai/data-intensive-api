@@ -1,34 +1,28 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 
+	pgxpool "github.com/jackc/pgx/v5/pgxpool"
 	dotenv "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
+var Pool *pgxpool.Pool
 
-func ConnectDB() *sql.DB{
+func ConnectDB(){
 	envFile, envFileErr := dotenv.Read(".env.dev")
 	if envFileErr != nil{
 		log.Fatal(envFileErr)
 	}
 
-	host := envFile["HOST"]
-	dbPort := envFile["POSTGRES_PORT"]
-	dbName:= envFile["POSTGRES_DB"]
-	dbUser := envFile["POSTGRES_USER"]
-	dbPassword := envFile["POSTGRES_PASSWORD"]
-
-	psqlSetup := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", host, dbPort, dbUser, dbName, dbPassword)
-
-	db, errSql := sql.Open("postgres", psqlSetup)
-
-	if errSql != nil{
-		log.Fatal(errSql)
+	pool, err := pgxpool.New(context.Background(), envFile["POSTGRES_URL"])
+	
+	if err != nil{
+		fmt.Printf("Error while connecting to DB: %v\n", err)
 	}
 
-	return db
+	Pool = pool
 }
