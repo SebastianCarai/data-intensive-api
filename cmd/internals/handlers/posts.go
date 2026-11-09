@@ -5,6 +5,7 @@ import (
 	structs "data-intensive-api/cmd/internals/types"
 	"data-intensive-api/cmd/internals/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -76,5 +77,41 @@ func PostDetailsHandler(w http.ResponseWriter, r *http.Request){
 
 
 func NewPostHandler(w http.ResponseWriter, r *http.Request){
-	fmt.Println("New post added")
+
+	var p structs.Post
+
+	// Decode and validate r.Body
+	if err := utils.DecodeRequestBody(w ,r ,&p); err != nil{
+		var br structs.BadRequest
+		if errors.As(err, &br){
+			http.Error(w, br.Msg, br.Status)
+			return
+		}
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	aurhorId := utils.GetRandomInt(1, 10000)
+
+	// Add post to DB
+	var id int64
+	queryErr := db.Pool.QueryRow(
+		r.Context(), 
+		`insert into posts (author, content, likes_count, comments_count, created_at)
+		values ($1, $2, 0, 0, now())
+		returning id`,
+		aurhorId, p.Content,
+	).Scan(&id)
+
+	if queryErr != nil{
+		fmt.Printf("Error while creating post: %v\n", queryErr)
+		http.Error(w, "internal server error", 500)
+		return
+	}
+
+	res := fmt.Sprintf("Post successfully created with id: %v", id)
+	w.WriteHeader(201)
+	w.Write([]byte(res))
+
 }
