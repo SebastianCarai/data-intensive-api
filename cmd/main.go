@@ -1,8 +1,8 @@
 package main
 
 import (
-	"data-intensive-api/db"
-	"data-intensive-api/routes"
+	"data-intensive-api/cmd/internals/db"
+	"data-intensive-api/cmd/internals/routes"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,7 +19,6 @@ func main(){
 	mux := http.NewServeMux()
 
 	routes.SetupRoutes(mux)
-
 
 	fmt.Println("Listening on port 8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

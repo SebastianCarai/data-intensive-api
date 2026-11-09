@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"data-intensive-api/db"
-	"data-intensive-api/structs"
+	"data-intensive-api/cmd/internals/db"
+	structs "data-intensive-api/cmd/internals/types"
+	"data-intensive-api/cmd/internals/utils"
 	"encoding/json"
 	"fmt"
-	"math/rand/v2"
 	"net/http"
 	"time"
 
@@ -14,18 +14,15 @@ import (
 
 
 func HomeHandler(w http.ResponseWriter, r *http.Request){
-	w.Write([]byte("Hello from air"))
+	w.Write([]byte("Homapage"))
 }
 
 func UserHandler(w http.ResponseWriter, r *http.Request){
 
-	max := 10000
-	min := 1
-	randInt := rand.IntN(max - min) + min
 	now := time.Now()
 
 	
-	rows, err := db.Pool.Query(r.Context(), "select id, username from users where id=$1;", randInt)
+	rows, err := db.Pool.Query(r.Context(), "select id, username from users where id=$1;", utils.GetRandomInt(1, 10000))
 
 	if err != nil{
 		fmt.Printf("Error while querying db: %v\n", err)
@@ -40,7 +37,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	fmt.Println(time.Since(now))
+	fmt.Printf("GET /users: %vms\n", time.Since(now).Milliseconds())
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
