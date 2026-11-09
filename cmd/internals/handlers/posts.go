@@ -100,7 +100,7 @@ func NewPostHandler(w http.ResponseWriter, r *http.Request){
 		r.Context(), 
 		`insert into posts (author, content, likes_count, comments_count, created_at)
 		values ($1, $2, 0, 0, now())
-		returning id`,
+		returning id;`,
 		aurhorId, p.Content,
 	).Scan(&id)
 
